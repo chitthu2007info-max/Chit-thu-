@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CK Lottery - ကံစမ်းမဲ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #0b0e1a; color: #fff; max-width: 450px; margin: 0 auto; padding-bottom: 70px; }
+        .header { background: #1a1f35; padding: 15px; text-align: center; border-bottom: 2px solid #ffd700; }
+        .header h1 { color: #ffd700; }
+        .header span { color: #fff; }
+        .status { background: #222; padding: 5px 12px; border-radius: 20px; font-size: 13px; display: inline-block; margin-top: 5px; color: #ffd700; }
+
+        .container { padding: 15px; }
+        .card { background: #151e2f; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #2a3650; }
+        .card-title { color: #ffd700; font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+
+        .ball-grid { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        .ball { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; border: 3px solid #555; transition: 0.3s; cursor: pointer; }
+        .ball:hover { transform: scale(1.05); }
+        .ball.selected { border-color: #00ffcc; box-shadow: 0 0 25px #00ffcc; transform: scale(1.15); }
+        .ball.active { border-color: #ffd700; box-shadow: 0 0 30px #ffd700; transform: scale(1.2); }
+        .ball-red { background: #e74c3c; }
+        .ball-blue { background: #3498db; }
+        .ball-green { background: #2ecc71; }
+        .ball-yellow { background: #f1c40f; color: #222; }
+        .ball-purple { background: #9b59b6; }
+        .ball-black { background: #2c3e50; }
+
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a3650; background: #0d1422; color: #fff; font-size: 16px; margin-bottom: 10px; }
+        input:focus { border-color: #ffd700; outline: none; }
+        .fixed-phone { background: #1a2338; color: #ffd700; font-weight: bold; border-color: #ffd700; }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; background: #ffd700; color: #000; cursor: pointer; margin-top: 5px; }
+        .btn:active { transform: scale(0.95); }
+        .btn-secondary { background: #2a3650; color: #fff; border: 1px solid #ffd700; }
+        .btn-danger { background: #e74c3c; color: #fff; }
+        .btn-success { background: #2ecc71; color: #fff; }
+
+        .bottom-menu { position: fixed; bottom: 0; left: 0; right: 0; max-width: 450px; margin: 0 auto; background: #0d1422; border-top: 2px solid #ffd700; display: flex; justify-content: space-around; padding: 8px 0; }
+        .menu-item { background: none; border: none; color: #888; font-size: 12px; text-align: center; cursor: pointer; padding: 5px 10px; }
+        .menu-item .icon { font-size: 24px; display: block; }
+        .menu-item.active { color: #ffd700; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .msg { padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 14px; }
+        .msg-success { background: #1a4a2a; color: #2ecc71; border: 1px solid #2ecc71; }
+        .msg-error { background: #4a1a1a; color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .msg-info { background: #1a2338; color: #ffd700; border: 1px solid #ffd700; }
+        .hidden { display: none; }
+
+        .rule-table { width: 100%; font-size: 14px; border-collapse: collapse; }
+        .rule-table td { padding: 8px; border-bottom: 1px solid #2a3650; }
+        .rule-table td:last-child { color: #ffd700; font-weight: bold; }
+        
+        .selected-display { background: #0d1422; padding: 10px; border-radius: 8px; text-align: center; margin: 10px 0; border: 1px solid #2a3650; }
+        .selected-display span { color: #00ffcc; font-weight: bold; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>🎰 <span>CK</span> Lottery</h1>
+    <div id="statusText" class="status">👤 ဧည့်သည် (Guest)</div>
+</div>
+
+<div class="container">
+
+    <!-- ========== HOME PAGE ========== -->
+    <div id="page-home" class="page active">
+        <div class="card">
+            <div class="card-title">⚽ ဂဏန်းရွေးပြီး လောင်းကစားပါ</div>
+            
+            <div class="ball-grid" id="ballContainer">
+                <div class="ball ball-red" data-num="1">၀၁</div>
+                <div class="ball ball-blue" data-num="2">၀၂</div>
+                <div class="ball ball-green" data-num="3">၀၃</div>
+                <div class="ball ball-yellow" data-num="4">၀၄</div>
+                <div class="ball ball-purple" data-num="5">၀၅</div>
+                <div class="ball ball-black" data-num="6">၀၆</div>
+            </div>
+
+            <div class="selected-display">
+                👉 ရွေးထားသောဂဏန်း: <span id="selectedNumberDisplay">မရွေးရသေး</span>
+            </div>
+
+            <input type="number" id="betAmount" placeholder="လောင်းငွေထည့်ပါ (အနည်းဆုံး 100)" value="100" min="100">
+            <button class="btn" onclick="playGame()">🎲 ကစားမည် (နှိပ်ပါ)</button>
+            <div id="gameResult" class="msg hidden"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📜 စည်းကမ်းများ</div>
+            <table class="rule-table">
+                <tr><td>အကောင့်ဖွင့်ဘောနပ်</td><td>25,000 ကျပ်</td></tr>
+                <tr><td>အနိုင်ရလျှင် ရမည့်အဆ</td><td>၅ ဆ</td></tr>
+                <tr><td>အနည်းဆုံးလောင်းငွေ</td><td>100 ကျပ်</td></tr>
+                <tr><td>အများဆုံးလောင်းငွေ</td><td>10,000 ကျပ်</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== DEPOSIT PAGE ========== -->
+    <div id="page-deposit" class="page">
+        <div class="card">
+            <div class="card-title">💳 ငွေသွင်းရန်</div>
+            <div id="depositLock" class="msg msg-info">🔒 ငွေသွင်းရန် အကောင့်ဝင်ပါ။</div>
+            <div id="depositForm">
+                <input type="text" class="fixed-phone" value="09784145327" readonly>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <label><input type="radio" name="pay" value="Wave" checked> Wave Money</label>
+                    <label><input type="radio" name="pay" value="Kpay"> KBZ Pay</label>
+                </div>
+                <input type="text" placeholder="ပြေစာ (၅ လုံး)" id="refCode" maxlength="5">
+                <input type="number" placeholder="ပမာဏ (အနည်းဆုံး 10000)" id="depAmt" value="10000">
+                <div style="background:#1a2338; padding:10px; border-radius:8px; color:#ffd700; font-size:13px; margin-bottom:10px;">⚠️ ငါဘက်က အတည်ပြုမှသာ သွင်းပေးမည်</div>
+                <button class="btn" onclick="depositMoney()">💰 ငွေသွင်းမည်</button>
+                <div id="depositMsg" class="msg hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== WITHDRAW PAGE ========== -->
+    <div id="page-withdraw" class="page">
+        <div class="card">
+            <div class="card-title">💰 ငွေထုတ်ရန်</div>
+            <div id="withdrawLock" class="msg msg-info">🔒 ငွေထုတ်ရန် အကောင့်ဝင်ပါ။</div>
+            <div id="withdrawForm">
+                <input type="text" placeholder="မိတ်ဆွေ ဖုန်းနံပါတ်" id="wPhone">
+                <input type="number" placeholder="ထုတ်ယူမည့်ငွေ (အနည်းဆုံး 15000)" id="wAmt" value="15000">
+                <button class="btn" onclick="withdrawMoney()">💸 ငွေထုတ်မည်</button>
+                <div id="withdrawMsg" class="msg hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== ACCOUNT PAGE ========== -->
+    <div id="page-account" class="page">
+        <div class="card">
+            <div class="card-title">👤 အကောင့်</div>
+
+            <!-- Register -->
+            <div id="regSection">
+                <h3 style="color:#ffd700;">📝 အကောင့်သစ်ဖွင့်ရန်</h3>
+                <input type="text" placeholder="Username (၃လုံးအထက်)" id="regUser">
+                <input type="password" placeholder="Password (၆လုံးအထက်)" id="regPw">
+                <input type="password" placeholder="အတည်ပြု Password" id="regPw2">
+                <button class="btn btn-success" onclick="registerAccount()">✅ မှတ်ပုံတင်မည်</button>
+                <div id="regMsg" class="msg hidden"></div>
+                <hr style="border-color:#2a3650; margin:15px 0;">
+            </div>
+
+            <!-- Login -->
+            <h3 style="color:#ffd700;">🔑 အကောင့်ဝင်ရန်</h3>
+            <input type="text" placeholder="Username" id="loginUser">
+            <input type="password" placeholder="Password" id="loginPw">
+            <button class="btn btn-secondary" onclick="loginAccount()">🔓 ဝင်မည်</button>
+            <div id="loginMsg" class="msg hidden"></div>
+            <hr style="border-color:#2a3650; margin:15px 0;">
+
+            <!-- User Info -->
+            <div id="userInfo" class="hidden">
+                <h3 style="color:#2ecc71;">✅ အကောင့်အချက်အလက်</h3>
+                <p>👤 Username: <strong id="displayUser" style="color:#ffd700;">-</strong></p>
+                <p>💰 ငွေကျန်: <strong id="displayBal" style="color:#ffd700;">-</strong></p>
+                <button class="btn btn-danger" onclick="logoutAccount()">🚪 ထွက်မည် (Logout)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM MENU -->
+<div class="bottom-menu">
+    <button class="menu-item active" onclick="showPage('home')"><span class="icon">🏠</span>Home</button>
+    <button class="menu-item" onclick="showPage('deposit')"><span class="icon">💳</span>ငွေသွင်း</button>
+    <button class="menu-item" onclick="showPage('withdraw')"><span class="icon">💰</span>ငွေထုတ်</button>
+    <button class="menu-item" onclick="showPage('account')"><span class="icon">👤</span>အကောင့်</button>
+</div>
+
+<script>
+    // ===== STATE =====
+    let loggedInUser = null;
+    let balance = 25000; 
+    let selectedNumber = null; // 1-6
+
+    // ===== HELPERS =====
+    function showMsg(id, text, type) {
+        let el = document.getElementById(id);
+        el.classList.remove('hidden', 'msg-success', 'msg-error', 'msg-info');
+        el.classList.add('msg', 'msg-' + type);
+        el.innerText = text;
+    }
+    function hideMsg(id) {
+        document.getElementById(id).classList.add('hidden');
+    }
+
+    // ===== PAGE NAVIGATION =====
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        let pages = ['home', 'deposit', 'withdraw', 'account'];
+        let idx = pages.indexOf(page);
+        if (idx !== -1) document.querySelectorAll('.menu-item')[idx].classList.add('active');
+        updateUI();
+    }
+
+    // ===== BALL SELECTION =====
+    document.querySelectorAll('.ball').forEach(ball => {
+        ball.addEventListener('click', function() {
+            // Remove previous selection
+            document.querySelectorAll('.ball').forEach(b => b.classList.remove('selected'));
+            // Select this ball
+            this.classList.add('selected');
+            selectedNumber = parseInt(this.dataset.num);
+            document.getElementById('selectedNumberDisplay').innerText = 
+                (selectedNumber < 10 ? '၀' : '') + selectedNumber;
+            hideMsg('gameResult');
+        });
+    });
+
+    // ===== UPDATE UI =====
+    function updateUI() {
+        let status = document.getElementById('statusText');
+        let depositLock = document.getElementById('depositLock');
+        let withdrawLock = document.getElementById('withdrawLock');
+        let userInfo = document.getElementById('userInfo');
+        let regSection = document.getElementById('regSection');
+
+        if (loggedInUser) {
+            status.innerText = '✅ ' + loggedInUser;
+            status.style.color = '#2ecc71';
+            depositLock.classList.add('hidden');
+            withdrawLock.classList.add('hidden');
+            userInfo.classList.remove('hidden');
+            document.getElementById('displayUser').innerText = loggedInUser;
+            document.getElementById('displayBal').innerText = balance.toLocaleString() + ' ကျပ်';
+            regSection.style.display = 'none';
+        } else {
+            status.innerText = '👤 ဧည့်သည် (Guest)';
+            status.style.color = '#ffd700';
+            depositLock.classList.remove('hidden');
+            withdrawLock.classList.remove('hidden');
+            userInfo.classList.add('hidden');
+            regSection.style.display = 'block';
+        }
+        // Update balance display on home? Not needed, but we show in account.
+    }
+
+    // ===== REGISTER =====
+    function registerAccount() {
+        let user = document.getElementById('regUser').value.trim();
+        let pw = document.getElementById('regPw').value;
+        let pw2 = document.getElementById('regPw2').value;
+
+        if (localStorage.getItem('ck_user')) {
+            showMsg('regMsg', '⚠️ အကောင့်ရှိနှင့်ပြီးပါပြီ။ အကောင့်ဝင်ပါ။', 'error');
+            return;
+        }
+        if (!user || user.length < 3) {
+            showMsg('regMsg', '⚠️ Username အနည်းဆုံး ၃ လုံးထည့်ပါ။', 'error');
+            return;
+        }
+        if (pw.length < 6) {
+            showMsg('regMsg', '⚠️ Password အနည်းဆုံး ၆ လုံးထည့်ပါ။', 'error');
+            return;
+        }
+        if (pw !== pw2) {
+            showMsg('regMsg', '❌ Password နှစ်ခုမတူပါ။', 'error');
+            return;
+        }
+
+        localStorage.setItem('ck_user', user);
+        localStorage.setItem('ck_pass', pw);
+        localStorage.setItem('ck_balance', '25000');
+
+        showMsg('regMsg', '✅ အကောင့်အောင်မြင်ပါပြီ။ ဘောနပ် 25,000 ကျပ် ရရှိမည်။', 'success');
+        
+        setTimeout(() => {
+            loginDirect(user);
+        }, 1000);
+    }
+
+    // ===== LOGIN =====
+    function loginAccount() {
+        let user = document.getElementById('loginUser').value.trim();
+        let pw = document.getElementById('loginPw').value;
+        let savedUser = localStorage.getItem('ck_user');
+        let savedPass = localStorage.getItem('ck_pass');
+
+        if (!user || !pw) {
+            showMsg('loginMsg', '⚠️ Username နဲ့ Password ထည့်ပါ။', 'error');
+            return;
+        }
+        if (!savedUser) {
+            showMsg('loginMsg', '❌ အကောင့်မရှိသေးပါ။ အထက်တွင် မှတ်ပုံတင်ပါ။', 'error');
+            return;
+        }
+        if (user === savedUser && pw === savedPass) {
+            showMsg('loginMsg', '✅ ဝင်ရောက်မှုအောင်မြင်ပါသည်။', 'success');
+            loginDirect(user);
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPw').value = '';
+        } else {
+            showMsg('loginMsg', '❌ Username သို့မဟုတ် Password မှားပါသည်။', 'error');
+        }
+    }
+
+    function loginDirect(user) {
+        loggedInUser = user;
+        let bal = localStorage.getItem('ck_balance');
+        balance = bal ? parseInt(bal) : 25000;
+        updateUI();
+        showPage('home');
+        document.getElementById('regUser').value = '';
+        document.getElementById('regPw').value = '';
+        document.getElementById('regPw2').value = '';
+        hideMsg('regMsg');
+        hideMsg('loginMsg');
+    }
+
+    // ===== LOGOUT =====
+    function logoutAccount() {
+        loggedInUser = null;
+        updateUI();
+        showPage('home');
+    }
+
+    // ===== PLAY GAME (ပြင်ဆင်ပြီး) =====
+    function playGame() {
+        // 1. Check login
+        if (!loggedInUser) {
+            alert('ကျေးဇူးပြု၍ အကောင့်ဝင်ပါ။');
+            return;
+        }
+
+        // 2. Check selected number
+        if (!selectedNumber) {
+            showMsg('gameResult', '⚠️ ကျေးဇူးပြု၍ ဘောလုံးတစ်လုံးကို ဦးစွာရွေးပါ။', 'error');
+            return;
+        }
+
+        // 3. Check bet amount
+        let bet = parseInt(document.getElementById('betAmount').value);
+        if (!bet || bet < 100) {
+            showMsg('gameResult', '⚠️ အနည်းဆုံး ၁၀၀ ကျပ် လောင်းပါ။', 'error');
+            return;
+        }
+        if (bet > 10000) {
+            showMsg('gameResult', '⚠️ တစ်ခါလောင်းလျှင် အများဆုံး ၁၀,၀၀၀ ကျပ် သာလောင်းနိုင်ပါသည်။', 'error');
+            return;
+        }
+        if (bet > balance) {
+            showMsg('gameResult', '⚠️ သင့်တွင် ငွေကျန် ' + balance.toLocaleString() + ' ကျပ် သာရှိသည်။', 'error');
+            return;
+        }
+
+        // 4. Random draw (1-6)
+        let result = Math.floor(Math.random() * 6) + 1;
+
+        // 5. Highlight result
+        document.querySelectorAll('.ball').forEach(b => b.classList.remove('active'));
+        let resultBall = document.querySelector(`.ball[data-num="${result}"]`);
+        if (resultBall) resultBall.classList.add('active');
+
+        // 6. Check win/lose
+        let isWin = (selectedNumber === result);
+        let winAmount = 0;
+        let msgText = '';
+
+        if (isWin) {
+            winAmount = bet * 5;
+            balance += winAmount;
+            msgText = '🎉 အနိုင်ရပါပြီ! ဂဏန်း ' + (result<10?'၀':'') + result + ' ကျသွားတယ်။ ' + winAmount.toLocaleString() + ' ကျပ် ရရှိပါသည်။';
+        } else {
+            balance -= bet;
+            msgText = '😢 ရှုံးပါပြီ။ ဂဏန်း ' + (result<10?'၀':'') + result + ' ကျသွားတယ်။ ' + bet.toLocaleString() + ' ကျပ် ဆုံးရှုံးပါသည်။';
+        }
+
+        // 7. Save balance
+        localStorage.setItem('ck_balance', balance.toString());
+
+        // 8. Show result
+        let resultDiv = document.getElementById('gameResult');
+        resultDiv.classList.remove('hidden', 'msg-success', 'msg-error');
+        resultDiv.classList.add('msg', isWin ? 'msg-success' : 'msg-error');
+        resultDiv.innerText = msgText;
+
+        // 9. Update UI
+        updateUI();
+        
+        // 10. Clear selected state after a moment? No, keep it so they can bet again.
+        // But remove the "selected" visual so they don't get confused? Let them keep it or reselect.
+        // I'll leave the selection so they can quickly bet again on same number.
+        // But if they want to change, they can click another ball.
+    }
+
+    // ===== DEPOSIT =====
+    function depositMoney() {
+        if (!loggedInUser) {
+            alert('ကျေးဇူးပြု၍ အကောင့်ဝင်ပါ။');
+            return;
+        }
+        let ref = document.getElementById('refCode').value.trim();
+        let amount = parseInt(document.getElementById('depAmt').value);
+        let payMethod = document.querySelector('input[name="pay"]:checked');
+
+        if (ref.length !== 5) {
+            showMsg('depositMsg', '⚠️ ပြေစာ ၅ လုံးအတိအကျ ထည့်ပါ။', 'error');
+            return;
+        }
+        if (!amount || amount < 10000) {
+            showMsg('depositMsg', '⚠️ အနည်းဆုံး 10,000 ကျပ် သွင်းရမည်။', 'error');
+            return;
+        }
+
+        balance += amount;
+        localStorage.setItem('ck_balance', balance.toString());
+        let method = payMethod ? payMethod.value : 'Wave';
+        showMsg('depositMsg', '✅ ' + method + ' မှ ' + amount.toLocaleString() + ' ကျပ် အောင်မြင်စွာ သွင်းပြီးပါပြီ။', 'success');
+        document.getElementById('refCode').value = '';
+        updateUI();
+    }
+
+    // ===== WITHDRAW =====
+    function withdrawMoney() {
+        if (!loggedInUser) {
+            alert('ကျေးဇူးပြု၍ အကောင့်ဝင်ပါ။');
+            return;
+        }
+        let phone = document.getElementById('wPhone').value.trim();
+        let amount = parseInt(document.getElementById('wAmt').value);
+
+        if (!phone || phone.length < 9) {
+            showMsg('withdrawMsg', '⚠️ မိတ်ဆွေ ဖုန်းနံပါတ် အတိအကျထည့်ပါ။', 'error');
+            return;
+        }
+        if (!amount || amount < 15000) {
+            showMsg('withdrawMsg', '⚠️ အနည်းဆုံး 15,000 ကျပ် ထုတ်ယူရမည်။', 'error');
+            return;
+        }
+        if (amount > 60000) {
+            showMsg('withdrawMsg', '⚠️ တစ်ကြိမ်လျှင် အများဆုံး 60,000 ကျပ် သာ ထုတ်ယူနိုင်ပါသည်။', 'erro
